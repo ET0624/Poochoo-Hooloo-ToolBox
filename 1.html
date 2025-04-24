@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>貼圖加白邊 - 噗啾&呼嚕小工具箱</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1><i class="fas fa-tools"></i>噗啾&呼嚕小工具箱</h1>
+    </header>
+    <nav>
+        <a href="index.html"><i class="fas fa-home"></i> 首頁</a>
+        <a href="add-border.html" class="active"><i class="fas fa-border-style"></i> 貼圖加白邊</a>
+    </nav>
+    <main>
+        <div class="tool-card">
+            <div class="tool-title">
+                <i class="fas fa-border-style"></i>貼圖加白邊
+            </div>
+            
+            <label for="imageInput">
+                <div class="upload-area">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p><strong>點擊或拖放圖片到此區域</strong></p>
+                    <p class="hint">支援 PNG 格式（建議使用去背圖片）</p>
+                </div>
+            </label>
+            
+            <input type="file" id="imageInput" accept="image/png">
+            
+            <div class="loading-container" id="loading">
+                <div class="loading-spinner"></div>
+                <p>正在為您的圖片添加米白色邊框...</p>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress" id="progressBar"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="canvas-container">
+                <canvas id="canvas"></canvas>
+                <button id="downloadButton" class="btn btn-primary">
+                    <i class="fas fa-download"></i>下載圖片
+                </button>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <div class="footer-content">
+            <div class="social-links">
+                <a href="https://www.instagram.com/et_shamon0.0/"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+            </div>
+            <div class="copyright">
+                Copyright © 噗啾&呼嚕
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const downloadButton = document.getElementById('downloadButton');
+        const loading = document.getElementById('loading');
+        const progressBar = document.getElementById('progressBar');
+        const uploadArea = document.querySelector('.upload-area');
+
+        // 拖放功能
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--primary-color)';
+            uploadArea.style.backgroundColor = 'rgba(255, 126, 103, 0.1)';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#ddd';
+            uploadArea.style.backgroundColor = 'transparent';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#ddd';
+            uploadArea.style.backgroundColor = 'transparent';
+            
+            if (e.dataTransfer.files.length) {
+                imageInput.files = e.dataTransfer.files;
+                handleImageUpload();
+            }
+        });
+
+        // 點擊上傳區域觸發檔案選擇
+        uploadArea.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        imageInput.addEventListener('change', handleImageUpload);
+
+        function handleImageUpload() {
+            const file = imageInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        startProcessing(img);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+                
+                // 顯示檔案名稱
+                const fileName = file.name.length > 20 ? file.name.substring(0, 17) + '...' : file.name;
+                uploadArea.innerHTML = `
+                    <i class="fas fa-check-circle" style="color: var(--success-color)"></i>
+                    <p><strong>${fileName}</strong></p>
+                    <p class="hint">點擊此處更換圖片</p>
+                `;
+            }
+        }
+
+        function startProcessing(img) {
+            // 顯示加載動畫
+            loading.style.display = 'block';
+            downloadButton.style.display = 'none';
+            canvas.style.display = 'none';
+            progressBar.style.width = '0%';
+
+            // 模擬進度條
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 10) + 5;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    processImage(img);
+                }
+                progressBar.style.width = `${progress}%`;
+            }, 200);
+        }
+
+        function processImage(img) {
+            // 設定畫布大小為原始圖片尺寸以保留像素質量
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            // 創建臨時畫布來處理邊框
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = img.width;
+            tempCanvas.height = img.height;
+
+            // 繪製原始圖片到臨時畫布
+            tempCtx.drawImage(img, 0, 0);
+
+            // 獲取圖片數據
+            const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+            const data = imageData.data;
+
+            // 創建邊框畫布
+            const borderCanvas = document.createElement('canvas');
+            const borderCtx = borderCanvas.getContext('2d');
+            borderCanvas.width = img.width;
+            borderCanvas.height = img.height;
+
+            // 填充透明背景
+            borderCtx.clearRect(0, 0, borderCanvas.width, borderCanvas.height);
+
+            // 定義邊框參數
+            const borderWidth = Math.max(2, Math.min(img.width, img.height) * 0.01); // 邊框寬度
+            const gapFillRadius = 2; // 填充間隙的搜索半徑（像素）
+
+            // 創建一個陣列來記錄邊框像素
+            const borderPixels = [];
+
+            // 第一步：識別邊框像素
+            for (let y = 0; y < tempCanvas.height; y++) {
+                for (let x = 0; x < tempCanvas.width; x++) {
+                    const index = (y * tempCanvas.width + x) * 4;
+                    const alpha = data[index + 3];
+                    if (alpha > 0) { // 非透明像素
+                        // 檢查周圍是否有透明像素
+                        const hasTransparentNeighbor = (
+                            (x > 0 && data[((y * tempCanvas.width + (x - 1)) * 4) + 3] === 0) ||
+                            (x < tempCanvas.width - 1 && data[((y * tempCanvas.width + (x + 1)) * 4) + 3] === 0) ||
+                            (y > 0 && data[(((y - 1) * tempCanvas.width + x) * 4) + 3] === 0) ||
+                            (y < tempCanvas.height - 1 && data[(((y + 1) * tempCanvas.width + x) * 4) + 3] === 0)
+                        );
+                        if (hasTransparentNeighbor) {
+                            borderPixels.push({ x, y });
+                        }
+                    }
+                }
+            }
+
+            // 第二步：繪製邊框並填充間隙
+            borderCtx.fillStyle = '#FFF8E7'; // 米白色
+            borderPixels.forEach(({ x, y }) => {
+                // 繪製邊框像素
+                borderCtx.fillRect(x - borderWidth / 2, y - borderWidth / 2, borderWidth, borderWidth);
+                
+                // 檢查附近像素以填充間隙
+                for (let dy = -gapFillRadius; dy <= gapFillRadius; dy++) {
+                    for (let dx = -gapFillRadius; dx <= gapFillRadius; dx++) {
+                        const nx = x + dx;
+                        const ny = y + dy;
+                        if (nx >= 0 && nx < tempCanvas.width && ny >= 0 && ny < tempCanvas.height) {
+                            const nIndex = (ny * tempCanvas.width + nx) * 4;
+                            if (data[nIndex + 3] === 0) { // 透明像素
+                                // 檢查是否靠近其他邊框像素
+                                let nearBorder = false;
+                                for (let otherPixel of borderPixels) {
+                                    const dist = Math.sqrt((nx - otherPixel.x) ** 2 + (ny - otherPixel.y) ** 2);
+                                    if (dist <= gapFillRadius && dist > 0) {
+                                        nearBorder = true;
+                                        break;
+                                    }
+                                }
+                                if (nearBorder) {
+                                    borderCtx.fillRect(nx - borderWidth / 2, ny - borderWidth / 2, borderWidth, borderWidth);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 將邊框畫布繪製到主畫布下方
+            ctx.drawImage(borderCanvas, 0, 0);
+            // 再次繪製原始圖片以覆蓋邊框的內部
+            ctx.drawImage(img, 0, 0);
+
+            // 隱藏加載動畫並顯示結果
+            setTimeout(() => {
+                loading.style.display = 'none';
+                canvas.style.display = 'block';
+                downloadButton.style.display = 'inline-flex';
+                
+                // 平滑滾動到結果
+                canvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+
+            // 設置下載按鈕，確保高質量PNG
+            downloadButton.onclick = () => {
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const link = document.createElement('a');
+                link.download = `image-with-border-${timestamp}.png`;
+                link.href = canvas.toDataURL('image/png', 1.0); // 最大質量
+                link.click();
+                
+                // 添加下載動畫
+                downloadButton.innerHTML = '<i class="fas fa-check"></i> 下載完成';
+                downloadButton.style.backgroundColor = 'var(--success-color)';
+                setTimeout(() => {
+                    downloadButton.innerHTML = '<i class="fas fa-download"></i> 下載圖片';
+                    downloadButton.style.backgroundColor = 'var(--primary-color)';
+                }, 2000);
+            };
+        }
+    </script>
+</body>
+</html>
