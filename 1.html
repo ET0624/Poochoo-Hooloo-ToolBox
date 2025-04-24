@@ -32,6 +32,13 @@
             
             <input type="file" id="imageInput" accept="image/png">
             
+            <div style="text-align: center; margin: 1rem 0;">
+                <label>
+                    <input type="checkbox" id="isTextImage" checked>
+                    此圖片為文字
+                </label>
+            </div>
+            
             <div class="loading-container" id="loading">
                 <div class="loading-spinner"></div>
                 <p>正在為您的圖片添加米白色邊框...</p>
@@ -54,7 +61,7 @@
         <div class="footer-content">
             <div class="social-links">
                 <a href="https://www.instagram.com/et_shamon0.0/"><i class="fab fa-instagram"></i></a>
-                <a href="#"><i class="fab fa-github"></i></a>
+                
             </div>
             <div class="copyright">
                 Copyright © 噗啾&呼嚕
@@ -64,6 +71,7 @@
 
     <script>
         const imageInput = document.getElementById('imageInput');
+        const isTextImageCheckbox = document.getElementById('isTextImage');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const downloadButton = document.getElementById('downloadButton');
@@ -175,15 +183,21 @@
             const borderWidth = Math.max(2, Math.min(img.width, img.height) * 0.01); // 邊框寬度
             const gapFillRadius = 2; // 填充間隙的搜索半徑（像素）
 
-            // 創建一個陣列來記錄邊框像素
+            // 創建陣列來記錄邊框像素和邊界框
             const borderPixels = [];
+            let minX = img.width, maxX = 0, minY = img.height, maxY = 0;
 
-            // 第一步：識別邊框像素
+            // 第一步：識別邊框像素並計算邊界框
             for (let y = 0; y < tempCanvas.height; y++) {
                 for (let x = 0; x < tempCanvas.width; x++) {
                     const index = (y * tempCanvas.width + x) * 4;
                     const alpha = data[index + 3];
                     if (alpha > 0) { // 非透明像素
+                        // 更新邊界框
+                        minX = Math.min(minX, x);
+                        maxX = Math.max(maxX, x);
+                        minY = Math.min(minY, y);
+                        maxY = Math.max(maxY, y);
                         // 檢查周圍是否有透明像素
                         const hasTransparentNeighbor = (
                             (x > 0 && data[((y * tempCanvas.width + (x - 1)) * 4) + 3] === 0) ||
@@ -229,6 +243,19 @@
                     }
                 }
             });
+
+            // 第三步：如果圖片是文字，填充底部區域
+            if (isTextImageCheckbox.checked && maxY > minY) {
+                const textHeight = maxY - minY + 1;
+                const fillHeight = Math.max(borderWidth * 2, textHeight * 0.2); // 填充高度為文字高度的20%或邊框寬度的2倍
+                borderCtx.fillStyle = '#FFF8E7'; // 米白色
+                borderCtx.fillRect(
+                    minX - borderWidth,
+                    maxY - fillHeight,
+                    maxX - minX + 2 * borderWidth,
+                    fillHeight + borderWidth
+                );
+            }
 
             // 將邊框畫布繪製到主畫布下方
             ctx.drawImage(borderCanvas, 0, 0);
