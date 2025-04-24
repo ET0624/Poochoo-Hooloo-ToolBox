@@ -10,29 +10,80 @@
 </head>
 <body>
     <header>
-        <h1><i class="fas fa-tools"></i>噗啾&呼嚕小工具箱</h1>
+        <h1><a href="index.html"></a><i class="fas fa-tools"></i>噗啾&呼嚕小工具箱</a></h1>
     </header>
     <nav>
-        <a href="index.html" class="active"><i class="fas fa-home"></i> 首頁</a>
-        <a href="1.html"><i class="fas fa-border-style"></i> 貼圖加白邊</a>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a class="nav-link"></i>♥噗啾</a>
+                <div class="dropdown">
+                    <a href="1.html" class="dropdown-item"><i class="fas fa-border-style"></i> 貼圖加白邊</a>
+                </div>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link"></i>♥呼嚕</a>
+                <div class="dropdown">
+                    <a href="2.html" class="dropdown-item"><i class="fas fa-tools"></i> 工具範例</a>
+                </div>
+            </li>
+        </ul>
     </nav>
     <main>
         <div class="welcome-card">
             <h2>歡迎使用噗啾&呼嚕小工具箱</h2>
             <p>發現問題，解決問題!</p>
-            
+   
         </div>
     </main>
     <footer>
         <div class="footer-content">
             <div class="social-links">
                 <a href="https://www.instagram.com/et_shamon0.0/"><i class="fab fa-instagram"></i></a>
-               
+   
             </div>
             <div class="copyright">
                 Copyright © 噗啾&呼嚕
             </div>
         </div>
     </footer>
+    <script>
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const dropdown = item.querySelector('.dropdown');
+                const isActive = item.classList.contains('active');
+                
+                // 關閉其他下拉選單
+                document.querySelectorAll('.nav-item').forEach(otherItem => {
+                    otherItem.classList.remove('active');
+                    const otherDropdown = otherItem.querySelector('.dropdown');
+                    if (otherDropdown) otherDropdown.style.display = 'none';
+                });
+                
+                // 切換當前下拉選單
+                if (!isActive) {
+                    item.classList.add('active');
+                    dropdown.style.display = 'block';
+                }
+                
+                e.stopPropagation();
+            });
+        });
+
+        // 點擊頁面其他地方關閉下拉選單
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                const dropdown = item.querySelector('.dropdown');
+                if (dropdown) dropdown.style.display = 'none';
+            });
+        });
+
+        // 防止下拉選單內部點擊關閉
+        document.querySelectorAll('.dropdown').forEach(dropdown => {
+            dropdown.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        });
+    </script>
 </body>
 </html>
