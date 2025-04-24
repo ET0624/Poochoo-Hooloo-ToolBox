@@ -10,11 +10,24 @@
 </head>
 <body>
     <header>
-        <h1><i class="fas fa-tools"></i>噗啾&呼嚕小工具箱</h1>
+      <h1><a href="index.html"></a><i class="fas fa-tools"></i>噗啾&呼嚕小工具箱</a></h1>
     </header>
     <nav>
-        <a href="index.html"><i class="fas fa-home"></i> 首頁</a>
-        <a href="add-border.html" class="active"><i class="fas fa-border-style"></i> 貼圖加白邊</a>
+        <ul class="nav-menu">
+            <li class="nav-item">
+              
+                <a class="nav-link">♥噗啾</a>
+                <div class="dropdown">
+                    <a href="1.html" class="dropdown-item active"><i class="fas fa-border-style"></i> 貼圖加白邊</a>
+                </div>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link">♥呼嚕</a>
+                <div class="dropdown">
+                    <a href="https://yhonebox.github.io/PSTtime/" class="dropdown-item"><i class="fas fa-tools"></i>時區換算器</a>
+                </div>
+            </li>
+        </ul>
     </nav>
     <main>
         <div class="tool-card">
@@ -35,7 +48,7 @@
             <div style="text-align: center; margin: 1rem 0;">
                 <label>
                     <input type="checkbox" id="isTextImage" checked>
-                    此圖片為文字
+                    此圖片為文字（將在底部添加米白色填充）
                 </label>
             </div>
             
@@ -70,6 +83,46 @@
     </footer>
 
     <script>
+        // 導航欄下拉選單功能
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const dropdown = item.querySelector('.dropdown');
+                const isActive = item.classList.contains('active');
+                
+                // 關閉其他下拉選單
+                document.querySelectorAll('.nav-item').forEach(otherItem => {
+                    otherItem.classList.remove('active');
+                    const otherDropdown = otherItem.querySelector('.dropdown');
+                    if (otherDropdown) otherDropdown.style.display = 'none';
+                });
+                
+                // 切換當前下拉選單
+                if (!isActive) {
+                    item.classList.add('active');
+                    dropdown.style.display = 'block';
+                }
+                
+                e.stopPropagation();
+            });
+        });
+
+        // 點擊頁面其他地方關閉下拉選單
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                const dropdown = item.querySelector('.dropdown');
+                if (dropdown) dropdown.style.display = 'none';
+            });
+        });
+
+        // 防止下拉選單內部點擊關閉
+        document.querySelectorAll('.dropdown').forEach(dropdown => {
+            dropdown.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        });
+
+        // 圖片處理功能
         const imageInput = document.getElementById('imageInput');
         const isTextImageCheckbox = document.getElementById('isTextImage');
         const canvas = document.getElementById('canvas');
