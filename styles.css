@@ -65,6 +65,11 @@ header h1 i {
     color: var(--accent-color);
 }
 
+header a {
+    color: white;
+    text-decoration: none;
+}
+
 nav {
     background-color: white;
     padding: 0.8rem;
@@ -116,7 +121,8 @@ nav {
     overflow: hidden;
 }
 
-.nav-item.active .dropdown {
+.nav-item.active .dropdown,
+.nav-item:hover .dropdown {
     display: block;
 }
 
@@ -158,8 +164,7 @@ main {
 }
 
 .welcome-card {
-    text-align: center;
-}
+    text-align: center;}
 
 .welcome-card h2 {
     color: var(--primary-color);
@@ -262,10 +267,33 @@ canvas {
     color: white;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
     background-color: #ff6a4f;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(255, 126, 103, 0.3);
+}
+
+.btn-primary:disabled {
+    background-color: #d3d3d3;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: #ffa34f;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 176, 103, 0.3);
+}
+
+.btn-secondary:disabled {
+    background-color: #d3d3d3;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 #downloadButton {
@@ -275,6 +303,14 @@ canvas {
 
 #imageInput {
     display: none;
+}
+
+.action-buttons {
+    margin: 1.5rem 0;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 .loading-container {
@@ -315,6 +351,35 @@ canvas {
     width: 0;
     background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
     transition: width 0.3s ease;
+}
+
+.preview-container {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 2rem 0;
+}
+
+.preview-box {
+    flex: 1;
+    min-width: 300px;
+    text-align: center;
+}
+
+.preview-title {
+    font-size: 1.2rem;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.preview-image {
+    max-width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
 }
 
 footer {
@@ -379,5 +444,9 @@ footer {
     
     .welcome-card, .tool-card {
         padding: 1.5rem;
+    }
+    
+    .preview-box {
+        min-width: 100%;
     }
 }
