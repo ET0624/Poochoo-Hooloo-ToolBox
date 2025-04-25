@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>圖片去背 - 噗啾&呼嚕小工具箱</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1><a href="index.html"><i class="fas fa-tools"></i> 噗啾&呼嚕小工具箱</a></h1>
+    </header>
+    <nav>
+        <ul class="nav-menu">
+            <li class="nav-item">  
+                <a href="index.html" class="nav-link">HOME</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link">♥噗啾</a>
+                <div class="dropdown">
+                    <a href="1.html" class="dropdown-item"><i class="fas fa-border-style"></i> 貼圖加白邊</a>
+                    <a href="1_2.html" class="dropdown-item"><i class="fas fa-edit"></i> 圖片去背</a>
+                </div>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link">♥呼嚕</a>
+                <div class="dropdown">
+                    <a href="2_1.html" class="dropdown-item"><i class="fas fa-tools"></i> 時區換算器</a>
+                </div>
+            </li>
+        </ul>
+    </nav>
+    <main>
+        
+            <h2 class="tool-title"><i class="fas fa-edit"></i> 圖片去背工具</h2>
+            <label for="imageInput">
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p><strong>點擊或拖放圖片到此區域</strong></p>
+                    <p class="hint">支援 PNG、JPG 格式</p>
+                </div>
+            </label>
+            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+            <div class="action-buttons">
+                <button id="processBtn" class="btn btn-primary" disabled title="請先上傳圖片">
+                    <i class="fas fa-magic"></i> 開始去背
+                </button>
+                <button id="downloadBtn" class="btn btn-secondary" disabled title="請先完成去背處理">
+                    <i class="fas fa-download"></i> 下載結果
+                </button>
+                <button id="resetBtn" class="btn btn-secondary" title="清除所有內容並重新開始">
+                    <i class="fas fa-redo"></i> 重新開始
+                </button>
+            </div>
+            <div class="loading" id="loadingIndicator" style="display: none;">
+                <div class="loading-spinner"></div>
+               
+            </div>
+            <div class="preview-container" id="previewContainer" style="display: none;">
+                <div class="preview-box">
+                    <h3 class="preview-title">原始圖片</h3>
+                    <img id="originalImage" class="preview-image" src="" alt="原始圖片">
+                </div>
+                <div class="preview-box">
+                    <h3 class="preview-title">去背結果</h3>
+                    <img id="resultImage" class="preview-image" src="" alt="去背結果">
+                </div>
+            </div>
+        
+    </main>
+    <footer> 
+        <div class="footer-content">
+            <div class="social-links">
+                <a href="https://www.instagram.com/et_shamon0.0/"><i class="fab fa-instagram"></i></a>
+            </div>
+            <div class="copyright">
+                Copyright © 噗啾&呼嚕
+            </div>
+        </div>
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('imageInput');
+            const processBtn = document.getElementById('processBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const previewContainer = document.getElementById('previewContainer');
+            const originalImage = document.getElementById('originalImage');
+            const resultImage = document.getElementById('resultImage');
+
+            let selectedFile = null;
+            let processedImageUrl = null;
+
+            // 初始化：確保加載指示器隱藏
+            loadingIndicator.style.display = 'none';
+            updateButtonStates();
+
+            // 拖放功能
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                if (!processBtn.disabled) return;
+                this.style.borderColor = 'var(--primary-color)';
+                this.style.backgroundColor = 'rgba(255, 126, 103, 0.05)';
+            });
+
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                if (!processBtn.disabled) return;
+                this.style.borderColor = '#ddd';
+                this.style.backgroundColor = 'white';
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                if (!processBtn.disabled) return;
+                this.style.borderColor = '#ddd';
+                this.style.backgroundColor = 'white';
+                if (e.dataTransfer.files.length) {
+                    handleFileSelect(e.dataTransfer.files[0]);
+                }
+            });
+
+            // 文件選擇處理
+            fileInput.addEventListener('change', function() {
+                if (this.files.length) {
+                    handleFileSelect(this.files[0]);
+                }
+            });
+
+            function handleFileSelect(file) {
+                // 檢查文件類型
+                if (!file.type.match('image/')) {
+                    alert('請選擇 PNG、JPG 格式的圖片');
+                    return;
+                }
+
+                // 檢查文件大小 (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('文件大小超過 5MB 限制');
+                    return;
+                }
+
+                selectedFile = file;
+
+                // 顯示預覽
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    originalImage.src = e.target.result;
+                    previewContainer.style.display = 'flex';
+                    updateButtonStates();
+                };
+                reader.onerror = function() {
+                    alert('圖片讀取失敗，請選擇其他圖片');
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // 更新按鈕狀態
+            function updateButtonStates() {
+                processBtn.disabled = !selectedFile || loadingIndicator.style.display === 'block';
+                downloadBtn.disabled = !processedImageUrl || loadingIndicator.style.display === 'block';
+                resetBtn.disabled = loadingIndicator.style.display === 'block';
+            }
+
+            // 處理按鈕點擊 - 使用 Remove.bg API
+            processBtn.addEventListener('click', async function() {
+                if (!selectedFile || processBtn.disabled) return;
+
+                // 顯示加載指示器
+                loadingIndicator.style.display = 'block';
+                updateButtonStates();
+
+                try {
+                    const formData = new FormData();
+                    formData.append('image_file', selectedFile);
+                    formData.append('size', 'auto');
+
+                    const response = await fetch('https://api.remove.bg/v1.0/removebg', {
+                        method: 'POST',
+                        headers: {
+                            'X-Api-Key': 'f6dhKNeo7oQRFRFNg1akb8aF' // 替換為您的 Remove.bg API 密鑰
+                        },
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.errors?.[0]?.title || '去背失敗，請稍後重試');
+                    }
+
+                    const blob = await response.blob();
+                    processedImageUrl = URL.createObjectURL(blob);
+                    resultImage.src = processedImageUrl;
+
+                    // 隱藏加載指示器
+                    loadingIndicator.style.display = 'none';
+                    updateButtonStates();
+                } catch (error) {
+                    alert('處理失敗：' + error.message);
+                    loadingIndicator.style.display = 'none';
+                    updateButtonStates();
+                }
+            });
+
+            // 下載按鈕點擊
+            downloadBtn.addEventListener('click', function() {
+                if (!processedImageUrl || downloadBtn.disabled) return;
+
+                try {
+                    const link = document.createElement('a');
+                    link.href = processedImageUrl;
+                    link.download = '去背結果_' + (selectedFile.name.replace(/\.[^/.]+$/, '') || 'image') + '.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } catch (error) {
+                    alert('下載失敗：' + error.message);
+                }
+            });
+
+            // 重置按鈕點擊
+            resetBtn.addEventListener('click', function() {
+                if (resetBtn.disabled) return;
+
+                // 清除所有狀態
+                selectedFile = null;
+                processedImageUrl = null;
+                fileInput.value = '';
+                originalImage.src = '';
+                resultImage.src = '';
+                previewContainer.style.display = 'none';
+                loadingIndicator.style.display = 'none';
+                updateButtonStates();
+            });
+        });
+    </script>
+</body>
+</html>
